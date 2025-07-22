@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #8ba888;
+}
+
+body.dark {
+  background-color: #483d8b;
+}
+
+.toggle-container{
+  position: absolute;
+  top: 30px; /* Adjust as needed */
+  right: 30px; /* Adjust as needed */}
+
+@media (prefers-color-scheme: dark) {
+  body {
+  
+  --color-background: #072b98;
+  --color-foreground: #efefef;
+  }
+}
+
+.container {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 400vw;
+  height: 100vh;
+}
+
+.panel {
+  width: 80vw;
+  height: 95vh;
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+}
+
+.first-image {
+    background-image: url("assets/lambo.jpeg");
+
+}
+.second-image{
+  background-image: url("assets/macklin.jpeg");
+}
+
+.third-image{
+  background-image: url("assets/wellesley.jpeg");
+
+}
+.fifth-image {
+    background-image: url("assets/mateus.jpeg");
+
+}
+
+.body {
+  background-color: yellowgreen;
+  height: 100vh;
+}
+
+.box {
+  background: white;
+  opacity: 0.5;
+  padding: 2rem;
+  border-radius: 10px;
+  margin-top: 2rem;
+  align-self: left ;
+}
+
+.list-of-me {
+  text-align: center;
+  font-family: monospace;
+  font-style: inherit;
+  font-size: 10vw;
+  position:-webkit-sticky;
+}
+.list-of-me ul{
+  list-style: none;
+}
+
+.intro {
+  align-content: center;
+}
+
+#particles-bg {
+  position: absolute;
+  top: 0;
+  left:0;
+  bottom:0;
+  right: 0;
+  background-color: transparent;
+  z-index: -1;
+
+}
+
+.button {
+  size: 10vh;
+  border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 9999;
+}
+
+body.dark .button {
+  color: #B0E0E6;
+}
+
+.landing {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1; /* Ensure content appears above particles */
+  text-align: center;
+  padding: 0px;
+  
+
+}
+
+.landing h1 {
+  color:#44624a;
+  font-size: 5vh;
+}
+
+body.dark .landing h1 {
+  color: #B0E0E6;
+}
+
+.alignButton{
+  margin: auto;
+  z-index: 9999;
+
+}
