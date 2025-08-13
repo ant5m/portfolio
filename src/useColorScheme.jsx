@@ -1,16 +1,32 @@
+'use client'
+
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { useMediaQuery } from "react-responsive";
 
 const ColorSchemeContext = createContext();
 
 function usePersistedState(key, defaultValue) {
-  const [state, setState] = useState(() => {
-    const stored = localStorage.getItem(key);
-    return stored !== null ? JSON.parse(stored) : defaultValue;
-  });
+  const [state, setState] = useState(defaultValue);
 
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(state));
+    // Only access localStorage after component mounts (client-side)
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored !== null) {
+        setState(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.warn('localStorage not available:', error);
+    }
+  }, [key]);
+
+  useEffect(() => {
+    // Only set localStorage after component mounts (client-side)
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch (error) {
+      console.warn('localStorage not available:', error);
+    }
   }, [key, state]);
 
   return [state, setState];
@@ -27,10 +43,12 @@ export function ColorSchemeProvider({ children }) {
   }, [isDark, systemPrefersDark]);
 
   useEffect(() => {
-    if (value) {
-      document.body.classList.add("dark");
-    } else {
-      document.body.classList.remove("dark");
+    if (typeof document !== 'undefined') {
+      if (value) {
+        document.body.classList.add("dark");
+      } else {
+        document.body.classList.remove("dark");
+      }
     }
   }, [value]);
 

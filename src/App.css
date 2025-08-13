@@ -43,19 +43,19 @@ body.dark {
 }
 
 .first-image {
-    background-image: url("assets/lambo.jpeg");
+    background-image: url("/assets/lambo.jpeg");
 
 }
 .second-image{
-  background-image: url("assets/macklin.jpeg");
+  background-image: url("/assets/macklin.jpeg");
 }
 
 .third-image{
-  background-image: url("assets/wellesley.jpeg");
+  background-image: url("/assets/wellesley.jpeg");
 
 }
 .fifth-image {
-    background-image: url("assets/mateus.jpeg");
+    background-image: url("/assets/mateus.jpeg");
 
 }
 

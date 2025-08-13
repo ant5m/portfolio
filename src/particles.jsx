@@ -1,5 +1,7 @@
+'use client'
+
 import "./App.css";
-import { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
 function ParticlesBackground({ color }) {
   useEffect(() => {
