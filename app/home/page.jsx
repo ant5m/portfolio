@@ -1,22 +1,20 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useColorScheme } from '../../src/useColorScheme'
 
-export default function HomePage() {
+// Dynamic import to avoid SSR issues with Three.js
+const ThreeCanvas = dynamic(() => import('../../src/components/3D/Canvas'), {
+  loading: () => <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading 3D Scene...</div>,
+  ssr: false,
+})
+
+export default function PortfolioPage() {
   const { isDark } = useColorScheme()
-  
+
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
-      <div className="text-center">
-        <h1 className="text-6xl font-bold mb-8">Welcome Home!</h1>
-        <p className="text-xl mb-6">This is your new home page</p>
-        <button 
-          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          onClick={() => window.history.back()}
-        >
-          Go Back
-        </button>
-      </div>
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
+      <ThreeCanvas isDark={isDark} />
     </div>
   )
-} 
+}
