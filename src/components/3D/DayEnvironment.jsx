@@ -1,39 +1,27 @@
-'use client'
+import { useRef } from 'react'
 
 export default function DayEnvironment() {
   return (
     <>
-      <color attach="background" args={['#87CEEB']} />
-
-      {/* Sun - lower position */}
-      <mesh position={[8, 4, -2]} scale={2}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshBasicMaterial color="#FFD700" />
+      {/* Sun */}
+      <mesh position={[8, 6, -2]}>
+        <sphereGeometry args={[1.5, 16, 16]} />
+        <meshBasicMaterial color="#FDB813" />
       </mesh>
 
-      {/* Clouds - lower */}
-      <Cloud position={[7, 3, -1]} scale={1.5} />
-      <Cloud position={[-8, 2.5, 0]} scale={1.2} />
-      <Cloud position={[2, 3.5, -3]} scale={1} />
+      {/* Clouds */}
+      {[
+        { pos: [5, 5, 3], scale: 1.2 },
+        { pos: [-4, 4.5, 2], scale: 1.5 },
+        { pos: [2, 5.5, -4], scale: 1 }
+      ].map((cloud, i) => (
+        <mesh key={i} position={cloud.pos} scale={cloud.scale}>
+          <sphereGeometry args={[0.8, 8, 8]} />
+          <meshBasicMaterial color="rgba(255, 255, 255, 0.7)" transparent />
+        </mesh>
+      ))}
+
+      {/* Sky color from ambient light - handled in Canvas */}
     </>
-  )
-}
-
-function Cloud({ position, scale }) {
-  return (
-    <group position={position} scale={scale}>
-      <mesh position={[-1, 0, 0]}>
-        <sphereGeometry args={[0.8, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" />
-      </mesh>
-      <mesh position={[0, 0.2, 0]}>
-        <sphereGeometry args={[1, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" />
-      </mesh>
-      <mesh position={[1, 0, 0]}>
-        <sphereGeometry args={[0.8, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" />
-      </mesh>
-    </group>
   )
 }
