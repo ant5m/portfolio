@@ -32,7 +32,7 @@ function getSpotifyTheme(isDark) {
       }
 }
 
-export default function SpotifyWidget({ isVisible }) {
+export default function SpotifyWidget({ isVisible, onClose }) {
   const { isDark } = useColorScheme()
   const ui = getSpotifyTheme(isDark)
   const isMobileQuery = useMediaQuery({ maxWidth: 768 })
@@ -272,6 +272,31 @@ export default function SpotifyWidget({ isVisible }) {
         transition: 'opacity 0.25s ease',
       }}
     >
+      <button
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          border: `1px solid ${ui.cardBorder}`,
+          borderRadius: '10px',
+          padding: isMobile ? '8px 10px' : '9px 12px',
+          ...tapTargetStyle,
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          background: ui.accentSoft,
+          color: ui.text,
+          fontSize: isMobile ? '12px' : '13px',
+          zIndex: 2,
+        }}
+      >
+        Close
+      </button>
+      <div style={{ marginBottom: isMobile ? '8px' : '10px', paddingTop: isMobile ? '42px' : '46px' }}>
+        <strong style={{ color: ui.text, fontSize: isMobile ? '14px' : '15px', letterSpacing: '0.4px' }}>
+          Music Dashboard
+        </strong>
+      </div>
       {(featuredTrack || statsTrack) && (
         <>
           <audio

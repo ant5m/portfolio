@@ -1983,9 +1983,9 @@ export default function CanvasComponent({ isDark = false }) {
                   style={{
                     position: 'absolute',
                     top: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: isMobile ? 'min(90vw, 260px)' : '100%',
+                    left: 0,
+                    transform: 'none',
+                    width: '100%',
                     display: 'grid',
                     gap: '6px',
                     background: ui.panel,
@@ -2113,9 +2113,30 @@ export default function CanvasComponent({ isDark = false }) {
             boxShadow: ui.shadow,
             backdropFilter: 'blur(12px)',
             padding: isMobile ? '12px' : '16px',
+            paddingTop: isMobile ? '48px' : '52px',
+            position: 'relative',
             zIndex: 120
           }}
         >
+          <button
+            onClick={handleExitZoom}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              border: `1px solid ${ui.borderStrong}`,
+              borderRadius: '10px',
+              padding: isMobile ? '8px 10px' : '9px 12px',
+              ...TAP_TARGET_STYLE,
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              background: ui.accentSoft,
+              color: ui.text,
+              fontSize: isMobile ? '12px' : '13px',
+            }}
+          >
+            Close
+          </button>
           {isPhotographyPanel ? (
             <PhotographyPanel isDark={isDark} />
           ) : isExperiencePanel ? (
@@ -2267,7 +2288,10 @@ export default function CanvasComponent({ isDark = false }) {
         </div>
       )}
 
-      <SpotifyWidget isVisible={showSpotify} />
+      <SpotifyWidget
+        isVisible={showSpotify}
+        onClose={() => setIsMusicDashboardOpen(false)}
+      />
     </div>
   )
 }
