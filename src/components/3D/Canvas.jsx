@@ -1,11 +1,11 @@
 'use client'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Model from './Model'
 import DayEnvironment from './DayEnvironment'
 import NightEnvironment from './NightEnvironment'
 import SpotifyWidget from './SpotifyWidget'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import gsap from 'gsap'
@@ -401,96 +401,43 @@ function SkyBackground({ isDark }) {
 }
 
 function CustomFloor({ isDark }) {
-  const [texture, setTexture] = useState(null)
-  const textureCacheRef = useRef({})
-
-  const prepareTexture = (loadedTexture) => {
-    loadedTexture.colorSpace = THREE.SRGBColorSpace
-    loadedTexture.wrapS = THREE.RepeatWrapping
-    loadedTexture.wrapT = THREE.RepeatWrapping
-    loadedTexture.repeat.set(5, 5)
-    loadedTexture.center.set(0.5, 0.5)
-    loadedTexture.rotation = Math.PI
-    loadedTexture.needsUpdate = true
-    return loadedTexture
-  }
-
-  const loadTextureWithCache = (path, onComplete) => {
-    const cachedTexture = textureCacheRef.current[path]
-    if (cachedTexture) {
-      onComplete(cachedTexture)
-      return
-    }
-
-    const loader = new THREE.TextureLoader()
-    loader.load(
-      path,
-      (loadedTexture) => {
-        const prepared = prepareTexture(loadedTexture)
-        textureCacheRef.current[path] = prepared
-        onComplete(prepared)
-      },
-      undefined,
-      () => onComplete(null)
-    )
-  }
+  const { gl } = useThree()
+  const [dayTexture, nightTexture] = useLoader(THREE.TextureLoader, ['/flooring.jpg', '/night_floor.jpg'])
 
   useEffect(() => {
-    let mounted = true
-    const texturePaths = ['/flooring.jpg', '/night_floor.jpg']
-
-    texturePaths.forEach((path) => {
-      loadTextureWithCache(path, (loadedTexture) => {
-        if (!mounted || !loadedTexture) return
-        const activePath = isDark ? '/night_floor.jpg' : '/flooring.jpg'
-        if (path === activePath) {
-          setTexture(loadedTexture)
-        }
-      })
+    const allTextures = [dayTexture, nightTexture]
+    const maxAnisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy())
+    allTextures.forEach((loadedTexture) => {
+      if (!loadedTexture) return
+      loadedTexture.colorSpace = THREE.SRGBColorSpace
+      loadedTexture.wrapS = THREE.RepeatWrapping
+      loadedTexture.wrapT = THREE.RepeatWrapping
+      loadedTexture.minFilter = THREE.LinearMipmapLinearFilter
+      loadedTexture.magFilter = THREE.LinearFilter
+      loadedTexture.generateMipmaps = true
+      loadedTexture.anisotropy = maxAnisotropy
+      loadedTexture.repeat.set(20, 20)
+      loadedTexture.center.set(0.5, 0.5)
+      loadedTexture.rotation = Math.PI
+      loadedTexture.needsUpdate = true
     })
+  }, [dayTexture, nightTexture, gl])
 
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  useEffect(() => {
-    let mounted = true
-    const texturePath = isDark ? '/night_floor.jpg' : '/flooring.jpg'
-    loadTextureWithCache(texturePath, (loadedTexture) => {
-      if (!mounted) return
-      setTexture(loadedTexture)
-    })
-
-    return () => {
-      mounted = false
-    }
-  }, [isDark])
+  const activeTexture = isDark ? nightTexture : dayTexture
 
   return (
-    <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
+    <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
       <planeGeometry args={[13.75, 13.75]} />
-      {texture ? (
-        <meshStandardMaterial
-          map={texture}
-          roughness={0.92}
-          metalness={0.02}
-          side={THREE.DoubleSide}
-          polygonOffset
-          polygonOffsetFactor={-2}
-          polygonOffsetUnits={-2}
-        />
-      ) : (
-        <meshStandardMaterial
-          color="#8bc34a"
-          roughness={0.92}
-          metalness={0.02}
-          side={THREE.DoubleSide}
-          polygonOffset
-          polygonOffsetFactor={-2}
-          polygonOffsetUnits={-2}
-        />
-      )}
+      <meshStandardMaterial
+        map={activeTexture || undefined}
+        color={activeTexture ? '#ffffff' : isDark ? '#5b4aa3' : '#8bc34a'}
+        roughness={0.92}
+        metalness={0.02}
+        side={THREE.DoubleSide}
+        polygonOffset
+        polygonOffsetFactor={-1}
+        polygonOffsetUnits={-1}
+      />
     </mesh>
   )
 }
