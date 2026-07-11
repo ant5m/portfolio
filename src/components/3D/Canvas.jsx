@@ -5,6 +5,7 @@ import Model from './Model'
 import DayEnvironment from './DayEnvironment'
 import NightEnvironment from './NightEnvironment'
 import SpotifyWidget from './SpotifyWidget'
+import DarkModeToggle from '../../toggleButton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
@@ -1866,8 +1867,15 @@ export default function CanvasComponent({ isDark = false }) {
   const isExperiencePanel = shouldShowPanel && zoomedWall === 'Experience & Skills'
   const isCenteredPanel = isPhotographyPanel || isExperiencePanel
   const ui = getRetroUiTheme(isDark)
-  const isMobile = useMediaQuery({ maxWidth: 768 })
-  const isSmallPhone = useMediaQuery({ maxWidth: 430 })
+  const isMobileQuery = useMediaQuery({ maxWidth: 768 })
+  const isSmallPhoneQuery = useMediaQuery({ maxWidth: 430 })
+  const [hasMounted, setHasMounted] = useState(false)
+  const isMobile = hasMounted ? isMobileQuery : false
+  const isSmallPhone = hasMounted ? isSmallPhoneQuery : false
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
@@ -2013,9 +2021,45 @@ export default function CanvasComponent({ isDark = false }) {
             </div>
           )
         })}
+        {isMobile && (
+          <div
+            style={{
+              padding: '9px 10px',
+              background: ui.surfaceSoft,
+              color: ui.text,
+              border: `1px solid ${ui.border}`,
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <DarkModeToggle floating={false} />
+          </div>
+        )}
+        {isMobile && showZoom && (
+          <button
+            onClick={handleExitZoom}
+            style={{
+              padding: '9px 12px',
+              ...TAP_TARGET_STYLE,
+              background: ui.surfaceSoft,
+              color: ui.text,
+              border: `1px solid ${ui.borderStrong}`,
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '13px',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s',
+            }}
+          >
+            Exit
+          </button>
+        )}
       </div>
 
-      {showZoom && (
+      {showZoom && !isMobile && (
         <button
           onClick={handleExitZoom}
           style={{

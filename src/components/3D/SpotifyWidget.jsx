@@ -35,8 +35,11 @@ function getSpotifyTheme(isDark) {
 export default function SpotifyWidget({ isVisible }) {
   const { isDark } = useColorScheme()
   const ui = getSpotifyTheme(isDark)
-  const isMobile = useMediaQuery({ maxWidth: 768 })
-  const isSmallPhone = useMediaQuery({ maxWidth: 430 })
+  const isMobileQuery = useMediaQuery({ maxWidth: 768 })
+  const isSmallPhoneQuery = useMediaQuery({ maxWidth: 430 })
+  const [hasMounted, setHasMounted] = useState(false)
+  const isMobile = hasMounted ? isMobileQuery : false
+  const isSmallPhone = hasMounted ? isSmallPhoneQuery : false
   const tapTargetStyle = {
     minHeight: '44px',
     minWidth: '44px',
@@ -91,6 +94,10 @@ export default function SpotifyWidget({ isVisible }) {
     return () => {
       stopPreview()
     }
+  }, [])
+
+  useEffect(() => {
+    setHasMounted(true)
   }, [])
 
   useEffect(() => {
