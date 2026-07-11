@@ -1877,6 +1877,20 @@ export default function CanvasComponent({ isDark = false }) {
     setHasMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (!(zoomedWall === 'Music' && isMusicDashboardOpen && isAnimating)) {
+      return undefined
+    }
+
+    const fallbackTimeout = window.setTimeout(() => {
+      setIsAnimating(false)
+    }, 3600)
+
+    return () => {
+      window.clearTimeout(fallbackTimeout)
+    }
+  }, [zoomedWall, isMusicDashboardOpen, isAnimating])
+
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
       {showZoom ? (
@@ -2114,7 +2128,6 @@ export default function CanvasComponent({ isDark = false }) {
             backdropFilter: 'blur(12px)',
             padding: isMobile ? '12px' : '16px',
             paddingTop: isMobile ? '48px' : '52px',
-            position: 'relative',
             zIndex: 120
           }}
         >

@@ -48,6 +48,8 @@ export default function SpotifyWidget({ isVisible, onClose }) {
   const [statsTrack, setStatsTrack] = useState(null)
   const [featuredError, setFeaturedError] = useState(null)
   const [statsError, setStatsError] = useState(null)
+  const [featuredLoading, setFeaturedLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [featuredRange, setFeaturedRange] = useState('24h')
   const [statsRange, setStatsRange] = useState('24h')
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -65,7 +67,18 @@ export default function SpotifyWidget({ isVisible, onClose }) {
     })
 
     if (!response.ok) {
-      throw new Error('Failed to fetch track')
+      let errorMessage = `Failed to fetch Spotify data (status ${response.status})`
+      try {
+        const payload = await response.json()
+        if (payload?.details) {
+          errorMessage = payload.details
+        } else if (payload?.error) {
+          errorMessage = payload.error
+        }
+      } catch {
+        // Keep generic message when response body is not JSON.
+      }
+      throw new Error(errorMessage)
     }
 
     return response.json()
@@ -110,6 +123,7 @@ export default function SpotifyWidget({ isVisible, onClose }) {
     const loadFeaturedTrack = async (silent = false) => {
       if (cancelled) return
       try {
+        setFeaturedLoading(true)
         const data = await fetchTrack(featuredRange)
         if (cancelled) return
         setFeaturedTrack(data)
@@ -119,7 +133,11 @@ export default function SpotifyWidget({ isVisible, onClose }) {
       } catch (err) {
         console.error('Error fetching featured Spotify track:', err)
         if (!silent) {
-          setFeaturedError('Unable to load featured track')
+          setFeaturedError(err?.message || 'Unable to load featured track')
+        }
+      } finally {
+        if (!cancelled) {
+          setFeaturedLoading(false)
         }
       }
     }
@@ -127,6 +145,7 @@ export default function SpotifyWidget({ isVisible, onClose }) {
     const loadStatsTrack = async (silent = false) => {
       if (cancelled) return
       try {
+        setStatsLoading(true)
         const data = await fetchTrack(statsRange)
         if (cancelled) return
         setStatsTrack(data)
@@ -136,7 +155,11 @@ export default function SpotifyWidget({ isVisible, onClose }) {
       } catch (err) {
         console.error('Error fetching Spotify stats:', err)
         if (!silent) {
-          setStatsError('Unable to load stats')
+          setStatsError(err?.message || 'Unable to load stats')
+        }
+      } finally {
+        if (!cancelled) {
+          setStatsLoading(false)
         }
       }
     }
@@ -292,195 +315,196 @@ export default function SpotifyWidget({ isVisible, onClose }) {
       >
         Close
       </button>
-      <div style={{ marginBottom: isMobile ? '8px' : '10px', paddingTop: isMobile ? '42px' : '46px' }}>
-        <strong style={{ color: ui.text, fontSize: isMobile ? '14px' : '15px', letterSpacing: '0.4px' }}>
-          Music Dashboard
-        </strong>
-      </div>
-      {(featuredTrack || statsTrack) && (
-        <>
-          <audio
-            ref={previewAudioRef}
-            preload="none"
-            onEnded={() => setIsPreviewPlaying(false)}
-            onPause={() => setIsPreviewPlaying(false)}
-            onPlay={() => setIsPreviewPlaying(true)}
-          />
+      <div style={{ marginBottom: isMobile ? '8px' : '10px', paddingTop: isMobile ? '42px' : '46px' }} />
+      <audio
+        ref={previewAudioRef}
+        preload="none"
+        onEnded={() => setIsPreviewPlaying(false)}
+        onPause={() => setIsPreviewPlaying(false)}
+        onPlay={() => setIsPreviewPlaying(true)}
+      />
 
-          <div
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: isMobile ? '10px' : '14px',
+          alignItems: 'stretch'
+        }}
+      >
+        <section
+          style={{
+            background: `linear-gradient(160deg, ${ui.cardAlt}, ${ui.panelGlass})`,
+            border: `1px solid ${ui.cardBorder}`,
+            borderRadius: '14px',
+            padding: isMobile ? '10px' : '14px'
+          }}
+        >
+          <div style={{ color: ui.textMuted, fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.6px' }}>
+            BACKGROUND INFO
+          </div>
+          <h3 style={{ margin: '8px 0 10px 0', color: ui.text, fontSize: isMobile ? '18px' : '20px' }}>Music Dashboard</h3>
+          <p style={{ margin: '0 0 10px 0', color: ui.textMuted, lineHeight: 1.45, fontSize: isMobile ? '12px' : '13px' }}>
+            This panel highlights what Ant has been listening to recently. Growing up, I always loved music and
+            dancing; it&apos;s one of my biggest passions. In high school, I learned to play tenor saxophone, and I
+            have recently learned guitar. I also performed for the Filipino Student Association, opening for
+            Grammy-nominated Zara Larsson.
+          </p>
+          <a
+            href="https://open.spotify.com/user/awesometony1234?si=297edd3fe99944e4"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: ui.text, fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}
+          >
+            View Ant&apos;s Spotify profile
+          </a>
+        </section>
+
+        <section
+          style={{
+            background: `linear-gradient(165deg, ${ui.card}, ${ui.panelGlass})`,
+            border: `1px solid ${ui.cardBorder}`,
+            borderRadius: '14px',
+            padding: isMobile ? '10px' : '14px'
+          }}
+        >
+          {featuredTrack?.cover && (
+            <Image
+              src={featuredTrack.cover}
+              alt={featuredTrack.title}
+              width={640}
+              height={640}
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '10px',
+                marginBottom: '10px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+              }}
+            />
+          )}
+
+          <div style={{ color: ui.textMuted, fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+            CURRENT FEATURED TRACK
+          </div>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+            {[
+              { key: '24h', label: '24h' },
+              { key: '7d', label: '7d' },
+              { key: '30d', label: '30d' },
+            ].map((option) => (
+              <button
+                key={`featured-${option.key}`}
+                onClick={() => setFeaturedRange(option.key)}
+                style={{
+                  flex: 1,
+                  border: `1px solid ${ui.cardBorder}`,
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  ...tapTargetStyle,
+                  fontSize: isSmallPhone ? '11px' : '12px',
+                  fontWeight: 'bold',
+                  color: ui.text,
+                  background: featuredRange === option.key
+                    ? `linear-gradient(135deg, ${ui.accent} 0%, ${ui.textMuted} 100%)`
+                    : ui.panelGlass,
+                  cursor: 'pointer'
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <h3 style={{ margin: '0 0 2px 0', color: ui.text, fontSize: isMobile ? '17px' : '20px', fontWeight: 'bold' }}>
+            {featuredTrack?.title || (featuredLoading ? 'Loading featured track...' : '--')}
+          </h3>
+          <p style={{ margin: '0 0 12px 0', color: ui.textMuted, fontSize: isMobile ? '12px' : '14px' }}>
+            {featuredTrack?.artist || (featuredLoading ? 'Fetching Spotify data' : '--')}
+          </p>
+
+          <a
+            href={featuredTrack?.url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => {
+              if (!featuredTrack?.url) {
+                event.preventDefault()
+              }
+            }}
             style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: isMobile ? '10px' : '14px',
-              alignItems: 'stretch'
+              display: 'block',
+              textDecoration: 'none',
+              border: `1px solid ${ui.cardBorder}`,
+              borderRadius: '18px',
+              padding: '9px 12px',
+              fontSize: isSmallPhone ? '11px' : '12px',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              color: ui.text,
+              background: `linear-gradient(135deg, ${ui.accent} 0%, ${ui.textMuted} 100%)`,
+              marginBottom: '8px',
+              opacity: featuredTrack?.url ? 1 : 0.65,
+              pointerEvents: featuredTrack?.url ? 'auto' : 'none',
             }}
           >
-            <section
+            Open in Spotify
+          </a>
+
+          <button
+            onClick={handlePreviewToggle}
+            disabled={previewLoading || !featuredTrack}
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              ...tapTargetStyle,
+              background: isPreviewPlaying
+                ? `linear-gradient(135deg, ${ui.textMuted} 0%, ${ui.accent} 100%)`
+                : `linear-gradient(135deg, ${ui.accent} 0%, ${ui.cardAlt} 100%)`,
+              borderRadius: '18px',
+              color: ui.text,
+              fontSize: isSmallPhone ? '11px' : '12px',
+              fontWeight: 'bold',
+              border: `1px solid ${ui.cardBorder}`,
+              cursor: previewLoading || !featuredTrack ? 'not-allowed' : 'pointer',
+              opacity: previewLoading || !featuredTrack ? 0.75 : 1
+            }}
+          >
+            {previewLoading ? 'Loading preview...' : isPreviewPlaying ? 'Stop Preview' : 'Play Preview (30s)'}
+          </button>
+
+          {previewError && (
+            <div
               style={{
-                background: `linear-gradient(160deg, ${ui.cardAlt}, ${ui.panelGlass})`,
-                border: `1px solid ${ui.cardBorder}`,
-                borderRadius: '14px',
-                padding: isMobile ? '10px' : '14px'
+                marginTop: '8px',
+                color: ui.textMuted,
+                fontSize: '11px',
+                textAlign: 'center'
               }}
             >
-              <div style={{ color: ui.textMuted, fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.6px' }}>
-                BACKGROUND INFO
-              </div>
-              <h3 style={{ margin: '8px 0 10px 0', color: ui.text, fontSize: isMobile ? '18px' : '20px' }}>Music Dashboard</h3>
-              <p style={{ margin: '0 0 10px 0', color: ui.textMuted, lineHeight: 1.45, fontSize: isMobile ? '12px' : '13px' }}>
-                This panel highlights what Ant has been listening to recently. Growing up, I always loved music and
-                dancing; it&apos;s one of my biggest passions. In high school, I learned to play tenor saxophone, and I
-                have recently learned guitar. I also performed for the Filipino Student Association, opening for
-                Grammy-nominated Zara Larsson.
-              </p>
-              <a
-                href="https://open.spotify.com/user/awesometony1234?si=297edd3fe99944e4"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: ui.text, fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}
-              >
-                View Ant&apos;s Spotify profile
-              </a>
-            </section>
+              {previewError}
+            </div>
+          )}
+          {featuredError && (
+            <div style={{ marginTop: '8px', color: '#fca5a5', fontSize: '11px', textAlign: 'center' }}>
+              {featuredError}
+            </div>
+          )}
+        </section>
 
-            <section
-              style={{
-                background: `linear-gradient(165deg, ${ui.card}, ${ui.panelGlass})`,
-                border: `1px solid ${ui.cardBorder}`,
-                borderRadius: '14px',
-                padding: isMobile ? '10px' : '14px'
-              }}
-            >
-              {featuredTrack?.cover && (
-                <Image
-                  src={featuredTrack.cover}
-                  alt={featuredTrack.title}
-                  width={640}
-                  height={640}
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: '10px',
-                    marginBottom: '10px',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
-                  }}
-                />
-              )}
-
-              <div style={{ color: ui.textMuted, fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-                CURRENT FEATURED TRACK
-              </div>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
-                {[
-                  { key: '24h', label: '24h' },
-                  { key: '7d', label: '7d' },
-                  { key: '30d', label: '30d' },
-                ].map((option) => (
-                  <button
-                    key={`featured-${option.key}`}
-                    onClick={() => setFeaturedRange(option.key)}
-                    style={{
-                      flex: 1,
-                      border: `1px solid ${ui.cardBorder}`,
-                      borderRadius: '10px',
-                      padding: '10px 12px',
-                      ...tapTargetStyle,
-                      fontSize: isSmallPhone ? '11px' : '12px',
-                      fontWeight: 'bold',
-                      color: ui.text,
-                      background: featuredRange === option.key
-                        ? `linear-gradient(135deg, ${ui.accent} 0%, ${ui.textMuted} 100%)`
-                        : ui.panelGlass,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <h3 style={{ margin: '0 0 2px 0', color: ui.text, fontSize: isMobile ? '17px' : '20px', fontWeight: 'bold' }}>
-                {featuredTrack?.title || '--'}
-              </h3>
-              <p style={{ margin: '0 0 12px 0', color: ui.textMuted, fontSize: isMobile ? '12px' : '14px' }}>
-                {featuredTrack?.artist || '--'}
-              </p>
-
-              <a
-                href={featuredTrack?.url || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'block',
-                  textDecoration: 'none',
-                  border: `1px solid ${ui.cardBorder}`,
-                  borderRadius: '18px',
-                  padding: '9px 12px',
-                  fontSize: isSmallPhone ? '11px' : '12px',
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  color: ui.text,
-                  background: `linear-gradient(135deg, ${ui.accent} 0%, ${ui.textMuted} 100%)`,
-                  marginBottom: '8px'
-                }}
-              >
-                Open in Spotify
-              </a>
-
-              <button
-                onClick={handlePreviewToggle}
-                disabled={previewLoading}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  ...tapTargetStyle,
-                  background: isPreviewPlaying
-                    ? `linear-gradient(135deg, ${ui.textMuted} 0%, ${ui.accent} 100%)`
-                    : `linear-gradient(135deg, ${ui.accent} 0%, ${ui.cardAlt} 100%)`,
-                  borderRadius: '18px',
-                  color: ui.text,
-                  fontSize: isSmallPhone ? '11px' : '12px',
-                  fontWeight: 'bold',
-                  border: `1px solid ${ui.cardBorder}`,
-                  cursor: previewLoading ? 'not-allowed' : 'pointer',
-                  opacity: previewLoading ? 0.75 : 1
-                }}
-              >
-                {previewLoading ? 'Loading preview...' : isPreviewPlaying ? 'Stop Preview' : 'Play Preview (30s)'}
-              </button>
-
-              {previewError && (
-                <div
-                  style={{
-                    marginTop: '8px',
-                    color: ui.textMuted,
-                    fontSize: '11px',
-                    textAlign: 'center'
-                  }}
-                >
-                  {previewError}
-                </div>
-              )}
-              {featuredError && (
-                <div style={{ marginTop: '8px', color: '#fca5a5', fontSize: '11px', textAlign: 'center' }}>
-                  {featuredError}
-                </div>
-              )}
-            </section>
-
-            <section
-              style={{
-                background: `linear-gradient(165deg, ${ui.card}, ${ui.panelGlass})`,
-                border: `1px solid ${ui.cardBorder}`,
-                borderRadius: '14px',
-                padding: isMobile ? '10px' : '14px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px'
-              }}
-            >
-              <div style={{ color: ui.textMuted, fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.6px' }}>
-                LISTENING STATS
-              </div>
+        <section
+          style={{
+            background: `linear-gradient(165deg, ${ui.card}, ${ui.panelGlass})`,
+            border: `1px solid ${ui.cardBorder}`,
+            borderRadius: '14px',
+            padding: isMobile ? '10px' : '14px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}
+        >
+          <div style={{ color: ui.textMuted, fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.6px' }}>
+            LISTENING STATS
+          </div>
 
               <div style={{ display: 'flex', gap: '6px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                 {[
@@ -561,45 +585,45 @@ export default function SpotifyWidget({ isVisible, onClose }) {
                 ))}
               </div>
 
-              <div
-                style={{
-                  background: ui.panelGlass,
-                  border: `1px solid ${ui.cardBorder}`,
-                  borderRadius: '10px',
-                  padding: '10px',
-                  minHeight: '160px'
-                }}
-              >
-                {listItems.length === 0 ? (
-                  <div style={{ color: ui.textMuted, fontSize: '12px' }}>No data available yet for this view.</div>
-                ) : (
-                  listItems.map((entry, index) => (
-                    <div
-                      key={entry.id || `${entry.label}-${index}`}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 0',
-                        borderBottom: index === listItems.length - 1 ? 'none' : `1px solid ${ui.cardBorder}`
-                      }}
-                    >
-                      <div style={{ color: ui.text, fontSize: '12px', lineHeight: 1.3 }}>{entry.label}</div>
-                      <div style={{ color: ui.textMuted, fontSize: '11px', whiteSpace: isMobile ? 'normal' : 'nowrap', textAlign: 'right' }}>{entry.value}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {statsError && (
-                <div style={{ marginTop: '2px', color: '#fca5a5', fontSize: '11px' }}>
-                  {statsError}
+          <div
+            style={{
+              background: ui.panelGlass,
+              border: `1px solid ${ui.cardBorder}`,
+              borderRadius: '10px',
+              padding: '10px',
+              minHeight: '160px'
+            }}
+          >
+            {statsLoading ? (
+              <div style={{ color: ui.textMuted, fontSize: '12px' }}>Loading stats...</div>
+            ) : listItems.length === 0 ? (
+              <div style={{ color: ui.textMuted, fontSize: '12px' }}>No data available yet for this view.</div>
+            ) : (
+              listItems.map((entry, index) => (
+                <div
+                  key={entry.id || `${entry.label}-${index}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '6px 0',
+                    borderBottom: index === listItems.length - 1 ? 'none' : `1px solid ${ui.cardBorder}`
+                  }}
+                >
+                  <div style={{ color: ui.text, fontSize: '12px', lineHeight: 1.3 }}>{entry.label}</div>
+                  <div style={{ color: ui.textMuted, fontSize: '11px', whiteSpace: isMobile ? 'normal' : 'nowrap', textAlign: 'right' }}>{entry.value}</div>
                 </div>
-              )}
-            </section>
+              ))
+            )}
           </div>
-        </>
-      )}
+          {statsError && (
+            <div style={{ marginTop: '2px', color: '#fca5a5', fontSize: '11px' }}>
+              {statsError}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

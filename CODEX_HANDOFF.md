@@ -271,3 +271,58 @@ From `portfolio/`:
 - `public/projects/ktp-lambda-chapter-v2.png` (new, active)
 - `public/projects/bu-orientation.png` (new)
 - `public/projects/fsa-bu.png` (new)
+
+## Session Update (2026-07-11 Late Night)
+
+### UI/theme updates
+
+- Applied broad retro UI styling pass across app overlays/panels with:
+  - light mode: layered green shades
+  - dark mode: layered purple shades
+- Updated multiple panel/button styles in:
+  - `src/components/3D/Canvas.jsx`
+  - `src/components/3D/SpotifyWidget.jsx`
+  - `app/page.jsx`
+  - `app/home/page.jsx`
+  - `src/App.css`
+- Added/adjusted global typography and icon branding:
+  - tab title updated to `Ant's Matcha` in `app/layout.jsx`
+  - browser tab icon set via `app/icon.png`
+  - custom font wired through `src/App.css` (`public/fonts/Seona-DEMO.otf`)
+
+### Music dashboard content updates
+
+- Updated Music dashboard background copy for grammar/content in `src/components/3D/SpotifyWidget.jsx`.
+- Added Spotify profile link in dashboard background info section:
+  - `https://open.spotify.com/user/awesometony1234?si=297edd3fe99944e4`
+- Removed link underline per UI request.
+
+### API/data cleanup
+
+- Removed Google Places dependency from active UI flow:
+  - deleted `app/api/google-places/route.js`
+  - `FavoriteMatchaShopsPanel` now uses static local list data
+- `GOOGLE_MAPS_API_KEY` is no longer required for current app behavior.
+
+### Deploy/build fixes
+
+- Resolved Vercel install failure caused by React Three peer mismatch:
+  - downgraded `@react-three/drei` to `^9.122.0` to match `@react-three/fiber@^8.16.0`
+- Verified `next build` succeeds after dependency alignment.
+
+### 3D floor work (active tuning area)
+
+- Floor texture rendering logic in `CustomFloor` was iterated several times for reliability/quality:
+  - loader/caching adjustments
+  - plane sizing changes
+  - texture filtering/anisotropy tuning
+- If floor rendering appears inconsistent in local dev after edits, reset dev cache first:
+  1. stop dev server
+  2. delete `.next`
+  3. restart dev (`npm run dev`)
+
+### Dev-server stability notes
+
+- Encountered repeated local Next dev watcher issues (`EMFILE: too many open files`) when multiple dev servers were running.
+- More stable local startup used during troubleshooting:
+  - `WATCHPACK_POLLING=true npm run dev --prefix "portfolio"`

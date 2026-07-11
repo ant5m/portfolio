@@ -237,13 +237,18 @@ export async function GET(request) {
       )
     }
 
+    const authParams = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    })
+
     const authResponse = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
       },
-      body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
+      body: authParams.toString(),
       cache: 'no-store',
     })
 
