@@ -46,7 +46,7 @@ credentials.json
 credential.json
 token.json
 private.key
-
+*.md
 # Deployment/local tooling state
 .vercel
 .turbo
