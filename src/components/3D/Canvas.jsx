@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import gsap from 'gsap'
 import * as THREE from 'three'
+import { useMediaQuery } from 'react-responsive'
 
 const WALL_PANELS = {
   'About Me': {
@@ -1865,6 +1866,8 @@ export default function CanvasComponent({ isDark = false }) {
   const isExperiencePanel = shouldShowPanel && zoomedWall === 'Experience & Skills'
   const isCenteredPanel = isPhotographyPanel || isExperiencePanel
   const ui = getRetroUiTheme(isDark)
+  const isMobile = useMediaQuery({ maxWidth: 768 })
+  const isSmallPhone = useMediaQuery({ maxWidth: 430 })
 
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
@@ -1908,17 +1911,20 @@ export default function CanvasComponent({ isDark = false }) {
         ref={topNavRef}
         style={{
           position: 'absolute',
-          top: '30px',
+          top: isMobile ? '12px' : '30px',
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
-          gap: '15px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: isMobile ? '8px' : '15px',
+          width: isMobile ? 'min(96vw, 560px)' : 'auto',
           zIndex: 50,
           background: ui.surfaceStrong,
           border: `1px solid ${ui.borderStrong}`,
           borderRadius: '12px',
           boxShadow: ui.shadow,
-          padding: '10px',
+          padding: isMobile ? '8px' : '10px',
           backdropFilter: 'blur(12px)',
         }}
       >
@@ -1950,13 +1956,14 @@ export default function CanvasComponent({ isDark = false }) {
                   }
                 }}
                 style={{
-                  padding: '10px 20px',
+                  padding: isMobile ? '9px 12px' : '10px 20px',
                   background: isOpen ? ui.accentSoft : ui.surfaceSoft,
                   color: ui.text,
                   border: `1px solid ${isOpen ? ui.borderStrong : ui.border}`,
                   borderRadius: '10px',
                   cursor: 'pointer',
                   fontWeight: 'bold',
+                  fontSize: isMobile ? '13px' : '14px',
                   backdropFilter: 'blur(10px)',
                   transition: 'all 0.3s'
                 }}
@@ -1970,7 +1977,7 @@ export default function CanvasComponent({ isDark = false }) {
                     top: '100%',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: '100%',
+                    width: isMobile ? 'min(90vw, 260px)' : '100%',
                     display: 'grid',
                     gap: '6px',
                     background: ui.panel,
@@ -1991,7 +1998,7 @@ export default function CanvasComponent({ isDark = false }) {
                         borderRadius: '8px',
                         padding: '9px 10px',
                         cursor: 'pointer',
-                        fontSize: '14px',
+                        fontSize: isMobile ? '13px' : '14px',
                         fontWeight: 600,
                         border: `1px solid ${ui.border}`,
                         background: ui.surfaceSoft,
@@ -2013,9 +2020,9 @@ export default function CanvasComponent({ isDark = false }) {
           onClick={handleExitZoom}
           style={{
             position: 'absolute',
-            top: '30px',
-            right: '30px',
-            padding: '12px 20px',
+            top: isMobile ? '12px' : '30px',
+            right: isMobile ? '12px' : '30px',
+            padding: isMobile ? '10px 12px' : '12px 20px',
             ...TAP_TARGET_STYLE,
             background: ui.surface,
             color: ui.text,
@@ -2025,7 +2032,8 @@ export default function CanvasComponent({ isDark = false }) {
             fontWeight: 'bold',
             backdropFilter: 'blur(10px)',
             transition: 'all 0.3s',
-            zIndex: 100
+            zIndex: 100,
+            fontSize: isMobile ? '13px' : '14px',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = ui.accentSoft
@@ -2042,16 +2050,16 @@ export default function CanvasComponent({ isDark = false }) {
         <div
           style={{
             position: 'absolute',
-            left: isCenteredPanel ? '50%' : '30px',
+            left: isCenteredPanel || isMobile ? '50%' : '30px',
             top: isCenteredPanel ? '50%' : 'auto',
             right: 'auto',
-            bottom: isCenteredPanel ? 'auto' : '30px',
-            transform: isCenteredPanel ? 'translate(-50%, -50%)' : 'none',
+            bottom: isCenteredPanel ? 'auto' : isMobile ? '12px' : '30px',
+            transform: isCenteredPanel ? 'translate(-50%, -50%)' : isMobile ? 'translateX(-50%)' : 'none',
             width: isPhotographyPanel
-              ? 'min(860px, calc(100vw - 48px))'
+              ? isMobile ? 'min(96vw, 860px)' : 'min(860px, calc(100vw - 48px))'
               : isExperiencePanel
-                ? 'min(920px, calc(100vw - 48px))'
-              : 'min(460px, calc(100vw - 60px))',
+                ? isMobile ? 'min(96vw, 920px)' : 'min(920px, calc(100vw - 48px))'
+              : isMobile ? 'min(96vw, 460px)' : 'min(460px, calc(100vw - 60px))',
             maxHeight: isCenteredPanel ? 'min(82vh, 860px)' : 'none',
             overflowY: isCenteredPanel ? 'auto' : 'visible',
             background: ui.panel,
@@ -2060,7 +2068,7 @@ export default function CanvasComponent({ isDark = false }) {
             borderRadius: '14px',
             boxShadow: ui.shadow,
             backdropFilter: 'blur(12px)',
-            padding: '16px',
+            padding: isMobile ? '12px' : '16px',
             zIndex: 120
           }}
         >
@@ -2070,7 +2078,7 @@ export default function CanvasComponent({ isDark = false }) {
             <ExperienceShowcasePanel isDark={isDark} />
           ) : (
             <>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '22px' }}>{activePanel.title}</h2>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: isMobile ? '19px' : '22px' }}>{activePanel.title}</h2>
               <p style={{ margin: '0 0 10px 0', lineHeight: 1.45 }}>{activePanel.intro}</p>
               <ul style={{ margin: 0, paddingLeft: '18px', lineHeight: 1.45 }}>
                 {activePanel.bullets.map((bullet) => (
@@ -2093,23 +2101,23 @@ export default function CanvasComponent({ isDark = false }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '20px'
+            padding: isMobile ? '12px' : '20px'
           }}
         >
           <div
             onClick={(event) => event.stopPropagation()}
             style={{
-              width: 'min(620px, 92vw)',
+              width: isMobile ? '94vw' : 'min(620px, 92vw)',
               background: ui.panel,
               color: ui.text,
               border: `2px solid ${ui.borderStrong}`,
               borderRadius: '14px',
-              padding: '20px',
+              padding: isMobile ? '14px' : '20px',
               boxShadow: ui.shadow
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-              <h3 style={{ margin: 0, fontSize: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: isMobile ? '20px' : '24px' }}>
                 {ABOUT_ME_POPUPS[activeAboutTopic].title}
               </h3>
               <button
@@ -2117,7 +2125,7 @@ export default function CanvasComponent({ isDark = false }) {
                 style={{
                   border: `1px solid ${ui.borderStrong}`,
                   borderRadius: '10px',
-                  padding: '10px 14px',
+                  padding: isMobile ? '9px 10px' : '10px 14px',
                   ...TAP_TARGET_STYLE,
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -2154,29 +2162,29 @@ export default function CanvasComponent({ isDark = false }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '20px',
+            padding: isMobile ? '12px' : '20px',
           }}
         >
           <div
             onClick={(event) => event.stopPropagation()}
             style={{
-              width: 'min(520px, 92vw)',
+              width: isSmallPhone ? '94vw' : 'min(520px, 92vw)',
               background: ui.panel,
               color: ui.text,
               border: `2px solid ${ui.borderStrong}`,
               borderRadius: '14px',
-              padding: '20px',
+              padding: isMobile ? '14px' : '20px',
               boxShadow: ui.shadow,
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-              <h3 style={{ margin: 0, fontSize: '24px' }}>Contact Emails</h3>
+              <h3 style={{ margin: 0, fontSize: isMobile ? '20px' : '24px' }}>Contact Emails</h3>
               <button
                 onClick={closeEmailPopup}
                 style={{
                   border: `1px solid ${ui.borderStrong}`,
                   borderRadius: '10px',
-                  padding: '10px 14px',
+                  padding: isMobile ? '9px 10px' : '10px 14px',
                   ...TAP_TARGET_STYLE,
                   fontWeight: 'bold',
                   cursor: 'pointer',

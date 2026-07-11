@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useColorScheme } from '../../useColorScheme'
+import { useMediaQuery } from 'react-responsive'
 
 function getSpotifyTheme(isDark) {
   return isDark
@@ -34,6 +35,8 @@ function getSpotifyTheme(isDark) {
 export default function SpotifyWidget({ isVisible }) {
   const { isDark } = useColorScheme()
   const ui = getSpotifyTheme(isDark)
+  const isMobile = useMediaQuery({ maxWidth: 768 })
+  const isSmallPhone = useMediaQuery({ maxWidth: 430 })
   const tapTargetStyle = {
     minHeight: '44px',
     minWidth: '44px',
@@ -244,18 +247,18 @@ export default function SpotifyWidget({ isVisible }) {
       style={{
         position: 'fixed',
         left: '50%',
-        bottom: '24px',
+        bottom: isMobile ? '10px' : '24px',
         transform: 'translateX(-50%)',
-        width: 'min(1080px, calc(100vw - 32px))',
+        width: isMobile ? 'min(96vw, 1080px)' : 'min(1080px, calc(100vw - 32px))',
         background: ui.shell,
         borderRadius: '16px',
-        padding: '16px',
+        padding: isMobile ? '10px' : '16px',
         zIndex: 1000,
         backdropFilter: 'blur(20px)',
         border: `2px solid ${ui.shellBorder}`,
         boxShadow: '0 15px 50px rgba(0, 0, 0, 0.8)',
         overflow: 'auto',
-        maxHeight: 'min(78vh, 760px)',
+        maxHeight: isMobile ? 'min(74vh, 760px)' : 'min(78vh, 760px)',
         opacity: isHidden ? 0 : 1,
         pointerEvents: isHidden ? 'none' : 'auto',
         visibility: isHidden ? 'hidden' : 'visible',
@@ -275,8 +278,8 @@ export default function SpotifyWidget({ isVisible }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: '14px',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: isMobile ? '10px' : '14px',
               alignItems: 'stretch'
             }}
           >
@@ -285,14 +288,14 @@ export default function SpotifyWidget({ isVisible }) {
                 background: `linear-gradient(160deg, ${ui.cardAlt}, ${ui.panelGlass})`,
                 border: `1px solid ${ui.cardBorder}`,
                 borderRadius: '14px',
-                padding: '14px'
+                padding: isMobile ? '10px' : '14px'
               }}
             >
               <div style={{ color: ui.textMuted, fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.6px' }}>
                 BACKGROUND INFO
               </div>
-              <h3 style={{ margin: '8px 0 10px 0', color: ui.text }}>Music Dashboard</h3>
-              <p style={{ margin: '0 0 10px 0', color: ui.textMuted, lineHeight: 1.45, fontSize: '13px' }}>
+              <h3 style={{ margin: '8px 0 10px 0', color: ui.text, fontSize: isMobile ? '18px' : '20px' }}>Music Dashboard</h3>
+              <p style={{ margin: '0 0 10px 0', color: ui.textMuted, lineHeight: 1.45, fontSize: isMobile ? '12px' : '13px' }}>
                 This panel highlights what Ant has been listening to recently. Growing up, I always loved music and
                 dancing; it&apos;s one of my biggest passions. In high school, I learned to play tenor saxophone, and I
                 have recently learned guitar. I also performed for the Filipino Student Association, opening for
@@ -313,7 +316,7 @@ export default function SpotifyWidget({ isVisible }) {
                 background: `linear-gradient(165deg, ${ui.card}, ${ui.panelGlass})`,
                 border: `1px solid ${ui.cardBorder}`,
                 borderRadius: '14px',
-                padding: '14px'
+                padding: isMobile ? '10px' : '14px'
               }}
             >
               {featuredTrack?.cover && (
@@ -350,7 +353,7 @@ export default function SpotifyWidget({ isVisible }) {
                       borderRadius: '10px',
                       padding: '10px 12px',
                       ...tapTargetStyle,
-                      fontSize: '12px',
+                      fontSize: isSmallPhone ? '11px' : '12px',
                       fontWeight: 'bold',
                       color: ui.text,
                       background: featuredRange === option.key
@@ -363,10 +366,10 @@ export default function SpotifyWidget({ isVisible }) {
                   </button>
                 ))}
               </div>
-              <h3 style={{ margin: '0 0 2px 0', color: ui.text, fontSize: '20px', fontWeight: 'bold' }}>
+              <h3 style={{ margin: '0 0 2px 0', color: ui.text, fontSize: isMobile ? '17px' : '20px', fontWeight: 'bold' }}>
                 {featuredTrack?.title || '--'}
               </h3>
-              <p style={{ margin: '0 0 12px 0', color: ui.textMuted, fontSize: '14px' }}>
+              <p style={{ margin: '0 0 12px 0', color: ui.textMuted, fontSize: isMobile ? '12px' : '14px' }}>
                 {featuredTrack?.artist || '--'}
               </p>
 
@@ -380,7 +383,7 @@ export default function SpotifyWidget({ isVisible }) {
                   border: `1px solid ${ui.cardBorder}`,
                   borderRadius: '18px',
                   padding: '9px 12px',
-                  fontSize: '12px',
+                  fontSize: isSmallPhone ? '11px' : '12px',
                   fontWeight: 'bold',
                   textAlign: 'center',
                   color: ui.text,
@@ -403,7 +406,7 @@ export default function SpotifyWidget({ isVisible }) {
                     : `linear-gradient(135deg, ${ui.accent} 0%, ${ui.cardAlt} 100%)`,
                   borderRadius: '18px',
                   color: ui.text,
-                  fontSize: '12px',
+                  fontSize: isSmallPhone ? '11px' : '12px',
                   fontWeight: 'bold',
                   border: `1px solid ${ui.cardBorder}`,
                   cursor: previewLoading ? 'not-allowed' : 'pointer',
@@ -437,7 +440,7 @@ export default function SpotifyWidget({ isVisible }) {
                 background: `linear-gradient(165deg, ${ui.card}, ${ui.panelGlass})`,
                 border: `1px solid ${ui.cardBorder}`,
                 borderRadius: '14px',
-                padding: '14px',
+                padding: isMobile ? '10px' : '14px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px'
@@ -447,7 +450,7 @@ export default function SpotifyWidget({ isVisible }) {
                 LISTENING STATS
               </div>
 
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                 {[
                   { key: '24h', label: '24h' },
                   { key: '7d', label: '7d' },
@@ -457,12 +460,12 @@ export default function SpotifyWidget({ isVisible }) {
                     key={option.key}
                     onClick={() => setStatsRange(option.key)}
                     style={{
-                      flex: 1,
+                      flex: isMobile ? '1 1 calc(33.333% - 4px)' : 1,
                       border: `1px solid ${ui.cardBorder}`,
                       borderRadius: '12px',
                       padding: '10px 12px',
                       ...tapTargetStyle,
-                      fontSize: '12px',
+                      fontSize: isSmallPhone ? '11px' : '12px',
                       fontWeight: 'bold',
                       color: ui.text,
                       background: statsRange === option.key
@@ -479,7 +482,7 @@ export default function SpotifyWidget({ isVisible }) {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))',
                   gap: '8px'
                 }}
               >
@@ -497,7 +500,7 @@ export default function SpotifyWidget({ isVisible }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                 {[
                   { key: 'songs', label: 'Top Songs' },
                   { key: 'artists', label: 'Top 5 Artists' },
@@ -507,12 +510,12 @@ export default function SpotifyWidget({ isVisible }) {
                     key={option.key}
                     onClick={() => setStatsView(option.key)}
                     style={{
-                      flex: 1,
+                      flex: isMobile ? '1 1 calc(50% - 3px)' : 1,
                       border: `1px solid ${ui.cardBorder}`,
                       borderRadius: '10px',
                       padding: '10px 12px',
                       ...tapTargetStyle,
-                      fontSize: '12px',
+                      fontSize: isSmallPhone ? '11px' : '12px',
                       fontWeight: 'bold',
                       color: ui.text,
                       background: statsView === option.key
@@ -551,7 +554,7 @@ export default function SpotifyWidget({ isVisible }) {
                       }}
                     >
                       <div style={{ color: ui.text, fontSize: '12px', lineHeight: 1.3 }}>{entry.label}</div>
-                      <div style={{ color: ui.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>{entry.value}</div>
+                      <div style={{ color: ui.textMuted, fontSize: '11px', whiteSpace: isMobile ? 'normal' : 'nowrap', textAlign: 'right' }}>{entry.value}</div>
                     </div>
                   ))
                 )}
