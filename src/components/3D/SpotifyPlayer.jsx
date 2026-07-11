@@ -1,31 +1,120 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
+export default function SpotifyPlayer({ accessToken, getAccessToken, trackId, isVisible }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [deviceId, setDeviceId] = useState(null)
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState(null)
+
   const playerRef = useRef(null)
+  const accessTokenRef = useRef(accessToken)
+  const getAccessTokenRef = useRef(getAccessToken)
 
-  // Load Spotify Web Playback SDK
   useEffect(() => {
-    if (!accessToken) return
+    accessTokenRef.current = accessToken
+  }, [accessToken])
 
-    setDeviceId(null)
-    setIsReady(false)
-    setIsPlaying(false)
-    setError(null)
+  useEffect(() => {
+    getAccessTokenRef.current = getAccessToken
+  }, [getAccessToken])
+
+  const resolveAccessToken = async (forceRefresh = false) => {
+    if (typeof getAccessTokenRef.current === 'function') {
+      const token = await getAccessTokenRef.current({ forceRefresh })
+      if (token) {
+        return token
+      }
+    }
+
+    return accessTokenRef.current || null
+  }
+
+  const spotifyFetch = async (url, options = {}, retryOnUnauthorized = true) => {
+    const token = await resolveAccessToken(false)
+    if (!token) {
+      return null
+    }
+
+    const makeRequest = async (authToken) => {
+      const headers = {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${authToken}`
+      }
+
+      return fetch(url, {
+        ...options,
+        headers
+      })
+    }
+
+    let response = await makeRequest(token)
+
+    if (response.status === 401 && retryOnUnauthorized) {
+      const refreshedToken = await resolveAccessToken(true)
+      if (refreshedToken && refreshedToken !== token) {
+        response = await makeRequest(refreshedToken)
+      }
+    }
+
+    return response
+  }
+
+  useEffect(() => {
+    if (!isVisible) return undefined
+
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+    const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(userAgent)
+    if (isMobileBrowser) {
+      setDeviceId(null)
+      setIsReady(false)
+      setError('Spotify Web Playback is not supported on mobile browsers. Use Open in Spotify, or use desktop Chrome.')
+      return undefined
+    }
 
     let isCancelled = false
 
-    const initPlayer = () => {
+    const initPlayer = async () => {
       if (isCancelled || !window.Spotify?.Player) return
+
+      let initialToken = accessTokenRef.current
+      if (!initialToken) {
+        initialToken = await resolveAccessToken(true)
+      }
+      if (isCancelled || !initialToken) return
+      accessTokenRef.current = initialToken
 
       const player = new window.Spotify.Player({
         name: 'Portfolio Player',
         getOAuthToken: (callback) => {
-          callback(accessToken)
+          // Provide token immediately; refresh in background to reduce SDK init race conditions.
+          const cachedToken = accessTokenRef.current
+          if (cachedToken) {
+            callback(cachedToken)
+            resolveAccessToken(false)
+              .then((token) => {
+                if (token) {
+                  accessTokenRef.current = token
+                }
+              })
+              .catch(() => {
+                // Keep using the cached token until Spotify asks again.
+              })
+            return
+          }
+
+          resolveAccessToken(true)
+            .then((token) => {
+              if (token) {
+                accessTokenRef.current = token
+                callback(token)
+                return
+              }
+              setError('Spotify authentication failed.')
+            })
+            .catch(() => {
+              setError('Spotify authentication failed.')
+            })
         },
         volume: 0.5,
       })
@@ -51,18 +140,24 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
 
       player.addListener('initialization_error', (e) => {
         console.error(e)
-        setError('Spotify player failed to initialize.')
+        const details = e?.message ? ` (${e.message})` : ''
+        setError(`Spotify player failed to initialize${details}. Try Chrome, non-private mode.`)
       })
+
       player.addListener('authentication_error', (e) => {
         console.error(e)
-        setError('Spotify authentication failed.')
+        setError('Spotify authentication failed. Check token/scopes and reconnect.')
       })
+
       player.addListener('account_error', (e) => {
         console.error(e)
         setError('Spotify account error. Make sure you have Premium.')
       })
 
-      player.connect()
+      const connected = await player.connect()
+      if (!connected && !isCancelled) {
+        setError('Unable to connect Spotify player. Keep Spotify open and retry.')
+      }
     }
 
     if (window.Spotify?.Player) {
@@ -74,8 +169,10 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
         script.id = 'spotify-player-sdk'
         script.src = 'https://sdk.scdn.co/spotify-player.js'
         script.async = true
+        script.onload = () => initPlayer()
         document.body.appendChild(script)
       }
+
       window.onSpotifyWebPlaybackSDKReady = () => initPlayer()
     }
 
@@ -85,23 +182,24 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
         playerRef.current.disconnect()
       }
     }
-  }, [accessToken])
+  }, [isVisible])
 
   const transferPlayback = async () => {
     if (!deviceId) return false
+
     try {
-      const response = await fetch('https://api.spotify.com/v1/me/player', {
+      const response = await spotifyFetch('https://api.spotify.com/v1/me/player', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           device_ids: [deviceId],
           play: false,
         }),
       })
-      return response.ok
+
+      return Boolean(response && response.ok)
     } catch (error) {
       console.error('Error transferring playback:', error)
       return false
@@ -113,25 +211,29 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
       setError('Spotify device not ready yet. Open Spotify and try again.')
       return
     }
+
     if (!trackId) {
       setError('No track selected to play.')
       return
     }
 
     try {
-      const playRequest = () =>
-        fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            uris: [`spotify:track:${trackId}`],
-          }),
-        })
+      const playRequest = () => spotifyFetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          uris: [`spotify:track:${trackId}`],
+        }),
+      })
 
       let response = await playRequest()
+
+      if (!response) {
+        setError('Spotify authentication failed. Please reconnect.')
+        return
+      }
 
       if (response.status === 404) {
         const transferred = await transferPlayback()
@@ -145,6 +247,8 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
         setError(null)
       } else if (response.status === 404) {
         setError('Spotify device not found. Open Spotify and try again.')
+      } else if (response.status === 401) {
+        setError('Spotify session expired. Refreshing token and try again.')
       } else {
         setError('Playback failed. Try opening Spotify and retry.')
       }
@@ -152,8 +256,6 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
       console.error('Error playing track:', error)
       setError('Playback failed due to a network error.')
     }
-
-    return
   }
 
   const togglePlayback = async () => {
@@ -163,15 +265,20 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
     }
 
     if (isPlaying) {
-      const response = await fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
+      const response = await spotifyFetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
       })
+
+      if (!response) {
+        setError('Spotify authentication failed. Please reconnect.')
+        return
+      }
+
       if (response.ok) {
         setIsPlaying(false)
         setError(null)
+      } else if (response.status === 401) {
+        setError('Spotify session expired. Refreshing token and try again.')
       } else {
         setError('Pause failed. Try again in a moment.')
       }
@@ -180,7 +287,7 @@ export default function SpotifyPlayer({ accessToken, trackId, isVisible }) {
     }
   }
 
-  if (!isVisible || !accessToken) return null
+  if (!isVisible || (!accessToken && typeof getAccessToken !== 'function')) return null
 
   return (
     <div

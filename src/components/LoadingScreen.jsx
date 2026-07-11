@@ -1,7 +1,10 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import { useColorScheme } from '../useColorScheme'
 
-export default function LoadingScreen({ isDark }) {
+export default function LoadingScreen({ isDark: isDarkProp }) {
+  const colorScheme = useColorScheme()
+  const isDark = typeof isDarkProp === 'boolean' ? isDarkProp : !!colorScheme?.isDark
   const containerRef = useRef(null)
 
   useEffect(() => {
@@ -12,7 +15,7 @@ export default function LoadingScreen({ isDark }) {
     const particlesJS = window.particlesJS
 
     if (particlesJS) {
-      const particleColor = isDark ? '#B0E0E6' : '#44624a'
+      const particleColor = isDark ? '#ceb8ff' : '#44624a'
       
       particlesJS('particles-js', {
         particles: {
@@ -51,12 +54,12 @@ export default function LoadingScreen({ isDark }) {
   }, [isDark])
 
   const bgGradient = isDark
-    ? 'linear-gradient(135deg, #2a2a4e 0%, #1a1a3e 100%)'
+    ? 'linear-gradient(135deg, #5b4aa3 0%, #392b76 52%, #271b57 100%)'
     : 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)'
 
-  const textColor = isDark ? '#B0E0E6' : '#44624a'
-  const spinnerBorder = isDark ? 'rgba(176, 224, 230, 0.3)' : 'rgba(68, 98, 74, 0.3)'
-  const spinnerTop = isDark ? '#B0E0E6' : '#44624a'
+  const textColor = isDark ? '#efe8ff' : '#44624a'
+  const spinnerBorder = isDark ? 'rgba(206, 184, 255, 0.3)' : 'rgba(68, 98, 74, 0.3)'
+  const spinnerTop = isDark ? '#ceb8ff' : '#44624a'
 
   return (
     <div

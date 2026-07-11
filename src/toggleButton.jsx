@@ -6,7 +6,7 @@ import Toggle from "react-toggle";
 import "react-toggle/style.css"
 import { useColorScheme } from "./useColorScheme.jsx";
 
-export const DarkModeToggle = () => {
+export const DarkModeToggle = ({ floating = true }) => {
   const { isDark, setIsDark } = useColorScheme();
   const [disabled, setDisabled] = useState(false);
   const iconStyle = { color: "var(--color-foreground)", fontSize: 18 };
@@ -18,7 +18,7 @@ export const DarkModeToggle = () => {
   };
 
   return (
-    <div className="toggle-container">
+    <div className={floating ? "toggle-container" : undefined} style={floating ? undefined : { position: 'static' }}>
       <Toggle
         checked={isDark}
         onChange={handleChange}

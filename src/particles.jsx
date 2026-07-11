@@ -29,7 +29,7 @@ function ParticlesBackground({ color }) {
           interactivity: {
             detect_on: "canvas",
             events: {
-              onhover: { enable: true, mode: "bubble" },
+              onhover: { enable: false },
               onclick: { enable: true, mode: "repulse" },
               resize: true
             },
