@@ -2,7 +2,7 @@ import { ColorSchemeProvider } from '../src/useColorScheme'
 import '../src/App.css'
 
 export const metadata = {
-  title: "Ant's World - Portfolio",
+  title: "Ant's Matcha",
   description: "Ant's personal portfolio website",
 }
 
