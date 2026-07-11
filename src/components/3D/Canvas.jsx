@@ -402,30 +402,65 @@ function SkyBackground({ isDark }) {
 
 function CustomFloor({ isDark }) {
   const [texture, setTexture] = useState(null)
+  const textureCacheRef = useRef({})
+
+  const prepareTexture = (loadedTexture) => {
+    loadedTexture.colorSpace = THREE.SRGBColorSpace
+    loadedTexture.wrapS = THREE.RepeatWrapping
+    loadedTexture.wrapT = THREE.RepeatWrapping
+    loadedTexture.repeat.set(5, 5)
+    loadedTexture.center.set(0.5, 0.5)
+    loadedTexture.rotation = Math.PI
+    loadedTexture.needsUpdate = true
+    return loadedTexture
+  }
+
+  const loadTextureWithCache = (path, onComplete) => {
+    const cachedTexture = textureCacheRef.current[path]
+    if (cachedTexture) {
+      onComplete(cachedTexture)
+      return
+    }
+
+    const loader = new THREE.TextureLoader()
+    loader.load(
+      path,
+      (loadedTexture) => {
+        const prepared = prepareTexture(loadedTexture)
+        textureCacheRef.current[path] = prepared
+        onComplete(prepared)
+      },
+      undefined,
+      () => onComplete(null)
+    )
+  }
 
   useEffect(() => {
     let mounted = true
-    const loader = new THREE.TextureLoader()
-    const texturePath = isDark ? '/night_floor.jpg' : '/flooring.jpg'
+    const texturePaths = ['/flooring.jpg', '/night_floor.jpg']
 
-    loader.load(
-      texturePath,
-      (loadedTexture) => {
-        if (!mounted) return
-        loadedTexture.colorSpace = THREE.SRGBColorSpace
-        loadedTexture.wrapS = THREE.RepeatWrapping
-        loadedTexture.wrapT = THREE.RepeatWrapping
-        loadedTexture.repeat.set(5, 5)
-        loadedTexture.center.set(0.5, 0.5)
-        loadedTexture.rotation = Math.PI
-        loadedTexture.needsUpdate = true
-        setTexture(loadedTexture)
-      },
-      undefined,
-      () => {
-        if (mounted) setTexture(null)
-      }
-    )
+    texturePaths.forEach((path) => {
+      loadTextureWithCache(path, (loadedTexture) => {
+        if (!mounted || !loadedTexture) return
+        const activePath = isDark ? '/night_floor.jpg' : '/flooring.jpg'
+        if (path === activePath) {
+          setTexture(loadedTexture)
+        }
+      })
+    })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    const texturePath = isDark ? '/night_floor.jpg' : '/flooring.jpg'
+    loadTextureWithCache(texturePath, (loadedTexture) => {
+      if (!mounted) return
+      setTexture(loadedTexture)
+    })
 
     return () => {
       mounted = false
